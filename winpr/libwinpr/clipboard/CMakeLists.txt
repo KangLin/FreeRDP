@@ -20,13 +20,18 @@ winpr_module_add(
 	clipboard.c
 	clipboard.h)
 
-# MinGW has unistd.h
-if(HAVE_UNISTD_H AND NOT WIN32)
-	winpr_definition_add(-DWITH_WCLIPBOARD_POSIX)
-	winpr_module_add(
-		posix.h
-		posix.c
-	)
+if(WIN32)
+    winpr_module_add(
+        posix.h
+        posix.c
+        dirent.h
+        dirent.c
+        )
+elseif(HAVE_UNISTD_H)
+    winpr_module_add(
+        posix.h
+        posix.c
+        )
 endif()
 
 if(BUILD_TESTING)

@@ -24,15 +24,25 @@
 #define _FILE_OFFSET_BITS 64
 #define WIN32_FILETIME_TO_UNIX_EPOCH UINT64_C(11644473600)
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <errno.h>
 
-#include <dirent.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include "dirent.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef _WIN32
+#define S_ISDIR(x)  (((x)&S_IFDIR))
+#else
+#include <unistd.h>
+#endif
 
 #include <winpr/crt.h>
 #include <winpr/clipboard.h>
@@ -508,7 +518,11 @@ static BOOL convert_local_file_to_filedescriptor(const struct posix_file* file,
                                                  FILEDESCRIPTORW* descriptor)
 {
 	size_t remote_len = 0;
-	descriptor->dwFlags = FD_ATTRIBUTES | FD_FILESIZE | FD_WRITETIME | FD_PROGRESSUI;
+	descriptor->dwFlags = FD_ATTRIBUTES | FD_FILESIZE
+        #ifndef _WIN32
+            | FD_WRITETIME
+        #endif
+            | FD_PROGRESSUI;
 
 	if (file->is_directory)
 	{
